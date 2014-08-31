@@ -1,0 +1,12 @@
+# Created by .gitignore support plugin (hsz.mobi)
+
+src/code.google.com
+src/github.com
+pkg
+bin
+src/UnionGo/conf/app.conf
+src/UnionGo/go
+src/ShadowManage/go
+src/ShadowManage/ShadowManage
+src/ShadowManage/conf/app.conf
+src/server/server
