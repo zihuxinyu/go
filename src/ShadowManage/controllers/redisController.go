@@ -8,10 +8,11 @@ import (
 	"reflect"
 	"strings"
 	. "github.com/astaxie/beego/logs"
-	"net"
+	"github.com/astaxie/beego"
 )
 
 type RedisController struct {
+	beego.Controller
 	BaseController
 
 }
@@ -33,10 +34,7 @@ func (this *RedisController) SendEmail() {
 
 func (this *RedisController) Index() {
 
-	info, _ := net.InterfaceAddrs()
-	for _, addr := range info {
-		fmt.Println(strings.Split(addr.String(), "/")[0])
-	}
+
 
 	this.TplNames = "redis.html"
 	this.Render()
@@ -144,5 +142,36 @@ func (this *RedisController) Get() {
 	this.ServeJson()
 
 
+
+}
+
+func (this *RedisController) Reset(){
+	StoragePtr = NewStorage()
+	Username:=this.GetString("user")
+	if err:=StoragePtr.ResetUsed("flow:"+Username);err!=nil{
+		this.Data["json"]=err
+	}else{
+		this.Data["json"]="已完成"
+	}
+
+	this.ServeJson()
+}
+//获取用户的限制信息，包括当前用量，限制记录
+func (this *RedisController) GetLimit() {
+
+	StoragePtr = NewStorage()
+
+	Username:=this.GetString("user")
+
+	size,_:=StoragePtr.GetSize("flow:"+Username)
+	log,_:=StoragePtr.GetLog("log:"+Username)
+	type Uinfo struct {
+		Name string
+		Size int64
+		Log string
+	}
+	uinfo:=Uinfo{Name:Username,Size:size,Log:log}
+	this.Data["json"] = &uinfo
+	this.ServeJson()
 
 }

@@ -20,7 +20,9 @@
                     <span class="separator"></span>
                     <a class="mini-button" iconCls="icon-save" onclick="saveGrid('datagrid1','/redis/save')"
                        plain="true">保存</a>
-
+                    <span class="separator"></span>
+                    <a class="mini-button" iconCls="icon-reload" onclick="resetUsed('datagrid1','/redis/reset')"
+                       plain="true">用量重置</a>
                 </td>
                 <td style="white-space:nowrap;">
                     <input id="key" class="mini-textbox" emptyText="请输入关键字" style="width:150px;" onenter="onKeyEnter"/>
@@ -34,8 +36,8 @@
 <div id="datagrid1" class="mini-datagrid" allowResize="true"
      url="/redis/get" idField="Name" pageSize="2000"
      allowAlternating="true" selectOnLoad="true"
-     onselectionchanged="onSelectionChanged"
      allowCellEdit="true" allowCellSelect="true"
+     onselectionchanged="onSelectionChanged"
      editNextOnEnterKey="true" editNextRowCell="true">
     <div property="columns">
         <div type="indexcolumn"></div>
@@ -43,6 +45,9 @@
         <div field="Name" headerAlign="center">姓名
             <input property="editor" class="mini-textbox" style="width:100%;"/>
         </div>
+
+
+
         <div field="Password" headerAlign="center">密码
             <input property="editor" class="mini-textbox" style="width:100%;"/>
         </div>
@@ -72,7 +77,22 @@
 
     </div>
 </div>
+<fieldset style="width:100%;border:solid 1px #aaa;position:relative;">
+    <legend>用户详细信息</legend>
 
+    <div id="editForm1" style="padding:5px;">
+        <input class="mini-hidden" name="id"/>
+        <table style="width:100%;">
+            <tr>
+                <td >用量(M)：</td>
+                <td ><input name="Size" class="mini-textbox" /></td>
+                <td >日志：</td>
+                <td ><input name="Log" class="mini-textbox" /></td>
+            </tr>
+
+        </table>
+    </div>
+</fieldset>
 
 <script type="text/javascript">
     mini.parse();
@@ -133,6 +153,67 @@
         });
     }
     /***********grid op end***********/
+
+
+    function onSelectionChanged(e) {
+
+        var grid = e.sender;
+        var record = grid.getSelected();
+        if (record) {
+            editRow(record._uid);
+        } else {
+            form.reset();
+        }
+    }
+    function editRow(row_uid) {
+        var row = grid.getRowByUID(row_uid);
+        if (row) {
+            var form = new mini.Form("editForm1");
+            if (grid.isNewRow(row)) {
+
+                form.reset();
+            } else {
+
+                form.loading();
+                $.ajax({
+                    url: "/redis/getlimit",
+                    data: { user: row.Name },
+                    type: "post",
+                    success: function (text) {
+                        text.Size=text.Size/1024/1024
+                        var o = mini.decode(text);
+                        form.setData(o);
+
+                        form.unmask();
+                    }
+                });
+            }
+
+            grid.doLayout();
+        }
+    }
+    function resetUsed(gridid, posturl) {
+        var grid = mini.get(gridid);
+        var data = grid.getSelected();
+
+
+        var msgid = mini.loading("数据重置中，请稍后......", "重置数据");
+        $.ajax({
+            url: posturl,
+            data: { user: data.Name },
+            type: "post",
+            success: function (text) {
+                mini.hideMessageBox(msgid);
+                success(text);
+                editRow(data._uid);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                mini.hideMessageBox(msgid);
+                error(jqXHR.responseText);
+            }
+        });
+
+    }
 </script>
 
 </body>

@@ -98,6 +98,17 @@ func (s *Storage) Set(key string, user User) (err error) {
 	return
 }
 
+//重置用量
+func (s *Storage) ResetUsed(key string) (err error) {
+
+
+	conn := s.pool.Get()
+	defer conn.Close()
+	_, err = conn.Do("SET", SS_PREFIX+key, 0)
+	return
+}
+
+
 func (s *Storage) IncrSize(key string, incr int) (score int64, err error) {
 	var conn = s.pool.Get()
 	defer conn.Close()
@@ -111,7 +122,22 @@ func (s *Storage) GetSize(key string) (score int64, err error) {
 	score, err = redis.Int64(conn.Do("GET", SS_PREFIX+key))
 	return
 }
+//将日志信息写入redis
+func (s *Storage) Log(key ,data string) (err error) {
 
+	conn := s.pool.Get()
+	defer conn.Close()
+	_, err = conn.Do("SET", SS_PREFIX+"log:"+key, data)
+	return
+}
+//将日志信息写入redis
+func (s *Storage) GetLog(key  string) (data string,err error) {
+
+	conn := s.pool.Get()
+	defer conn.Close()
+	data, err =redis.String( conn.Do("GET", SS_PREFIX+"log:"+key))
+	return
+}
 func (s *Storage) ZincrbySize(key, member string, incr int) (err error) {
 	var conn = s.pool.Get()
 	defer conn.Close()
