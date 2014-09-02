@@ -5,6 +5,7 @@ import (
 	_ "ShadowManage/routers"
 	. "github.com/zihuxinyu/GoLibrary"
 	"github.com/astaxie/beego/context"
+	_ "ShadowManage/task"
 )
 
 func main() {
@@ -26,7 +27,6 @@ func main() {
 		}
 	}
 	beego.InsertFilter("/redis/*", beego.BeforeExec, FilterUser)
-
 	beego.Run()
 }
 

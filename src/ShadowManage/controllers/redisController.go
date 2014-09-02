@@ -36,6 +36,7 @@ func (this *RedisController) Index() {
 
 
 
+
 	this.TplNames = "redis.html"
 	this.Render()
 }
