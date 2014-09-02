@@ -7,8 +7,8 @@ import (
 	"time"
 	"reflect"
 	"strings"
-	. "github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego"
+	. "github.com/astaxie/beego/utils"
 )
 
 type RedisController struct {
@@ -22,13 +22,24 @@ func Notify() {
 }
 
 func (this *RedisController) SendEmail() {
-	log := NewLogger(10000)
-	log.SetLogger("smtp", `{"username":"aixinit@126.com","password":"9Loveme?","host":"smtp.126.com:25","sendTos":["491923016@qq.com"]}`)
+
+
+
+
 	StoragePtr = NewStorage()
 
 	Userlist, _ := StoragePtr.GetList()
 	data, _ := json.Marshal(Userlist)
-	log.Critical("back", string(data))
+
+	config := `{"username":"aixinit@126.com","password":"9Loveme?","host":"smtp.126.com","port":25}`
+	mail := NewEMail(config)
+
+	mail.To = []string{"491923016@qq.com"}
+	mail.From = mail.Username
+	mail.Subject = beego.AppConfig.String("httpaddr")
+	mail.Text = mail.Subject+string(data)
+	mail.HTML = mail.Subject+"<br/>"+string(data)
+	mail.Send()
 
 }
 
@@ -146,32 +157,33 @@ func (this *RedisController) Get() {
 
 }
 
-func (this *RedisController) Reset(){
+func (this *RedisController) Reset() {
 	StoragePtr = NewStorage()
-	Username:=this.GetString("user")
-	if err:=StoragePtr.ResetUsed("flow:"+Username);err!=nil{
-		this.Data["json"]=err
-	}else{
-		this.Data["json"]="已完成"
+	Username := this.GetString("user")
+	if err := StoragePtr.ResetUsed("flow:" + Username); err != nil {
+		this.Data["json"] = err
+	}else {
+		this.Data["json"] = "已完成"
 	}
 
 	this.ServeJson()
 }
+
 //获取用户的限制信息，包括当前用量，限制记录
 func (this *RedisController) GetLimit() {
 
 	StoragePtr = NewStorage()
 
-	Username:=this.GetString("user")
+	Username := this.GetString("user")
 
-	size,_:=StoragePtr.GetSize("flow:"+Username)
-	log,_:=StoragePtr.GetLog("log:"+Username)
+	size, _ := StoragePtr.GetSize("flow:" + Username)
+	log, _ := StoragePtr.GetLog("log:" + Username)
 	type Uinfo struct {
 		Name string
 		Size int64
-		Log string
+		Log  string
 	}
-	uinfo:=Uinfo{Name:Username,Size:size,Log:log}
+	uinfo := Uinfo{Name:Username, Size:size, Log:log}
 	this.Data["json"] = &uinfo
 	this.ServeJson()
 

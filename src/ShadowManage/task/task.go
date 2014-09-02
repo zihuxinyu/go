@@ -15,7 +15,7 @@ func init(){
 	url:=beego.AppConfig.String("httpaddr")
 	port:=beego.AppConfig.String("httpport")
 	fetch:=fmt.Sprintf("http://%s:%s/redis/sendemail",url,port)
-	tk1 := toolbox.NewTask("SendConfig", "0/1 * * * * *", func() error {httplib.Get(fetch).String(); return nil })
+	tk1 := toolbox.NewTask("SendConfig", "0 */120 * * * *", func() error {httplib.Get(fetch).String(); return nil })
 	toolbox.AddTask("SendConfig", tk1)
 
 	toolbox.StartTask()
