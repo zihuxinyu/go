@@ -44,10 +44,6 @@ func (this *RedisController) SendEmail() {
 }
 
 func (this *RedisController) Index() {
-
-
-
-
 	this.TplNames = "redis.html"
 	this.Render()
 }
@@ -69,7 +65,7 @@ func (this *RedisController) Save() {
 
 	//按struct 遍历得到定义，及得到的值
 	for _, SingleItem := range dataList.List {
-		fmt.Println("第一次", SingleItem)
+//		fmt.Println("第一次", SingleItem)
 		for i := 0; i < StructType.NumField(); i++ {
 			f := StructType.Field(i)
 
@@ -106,30 +102,30 @@ func (this *RedisController) Save() {
 				}
 
 			}
-			fmt.Println(f.Name, SingleItem[f.Name], reflect.TypeOf(SingleItem[f.Name]))
+//			fmt.Println(f.Name, SingleItem[f.Name], reflect.TypeOf(SingleItem[f.Name]))
 		}
-		fmt.Println("第二次", SingleItem)
+//		fmt.Println("第二次", SingleItem)
 
 		if state := SingleItem["_state"]; state != "" {
 			//先将map 对应为json
 			x, _ := json.Marshal(SingleItem)
-			fmt.Println(reflect.TypeOf(x), string(x))
+//			fmt.Println(reflect.TypeOf(x), string(x))
 			//再将json对应为struct
 			json.Unmarshal(x, &usr)
 
 			switch state {
 			case "modified":
-				fmt.Println("modified", &usr)
+//				fmt.Println("modified", &usr)
 				if err := StoragePtr.Set("user:"+usr.Name, usr); err != nil {
 					fmt.Println("修改错误", err)
 				}
 			case "added":
-				fmt.Println("added", &usr)
+//				fmt.Println("added", &usr)
 				if err := StoragePtr.Set("user:"+usr.Name, usr); err != nil {
 					fmt.Println("新增错误", err)
 				}
 			case "removed":
-				fmt.Println("removed", &usr)
+//				fmt.Println("removed", &usr)
 				if err := StoragePtr.Del("user:" + usr.Name); err != nil {
 					fmt.Println("删除错误", err)
 				}
