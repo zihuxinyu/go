@@ -34,11 +34,13 @@ package controllers
 
 import (
 	. "UnionGo/Library"
-	"github.com/astaxie/beego"
-	"sort"
-	"fmt"
 	"crypto/sha1"
+	"fmt"
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/httplib"
+	"sort"
+	. "UnionGo/models/weixin"
+	"UnionGo/models/weixin"
 )
 
 var (
@@ -53,7 +55,6 @@ var (
 type SpController struct {
 	beego.Controller
 	BaseController
-
 }
 
 func (this *SpController) Index() {
@@ -67,8 +68,8 @@ func (this *SpController) Index() {
 
 func DoTest() {
 
-	ss := productService_categories()
-	fmt.Println(ss)
+	ss,err := productService_categories()
+	fmt.Println(ss,err)
 
 }
 
@@ -77,13 +78,20 @@ func DoTest() {
 //loginName	String	N	代理商登录名
 //parent	String	N	产品类别ID
 
-func productService_categories() string{
+func productService_categories() (content string, err error) {
 	method := "productService.categories"
 	Params := map[string]interface{}{
-		"method":method,
-
+		"method": method,
 	}
-	return Post2Serv(Params)
+	content,err =Post2Serv(Params)
+	m:=Splog{
+		Method:method,
+		Params:fmt.Sprintf("%s", Params),
+		Content:fmt.Sprintf("%s", content),
+		Err:fmt.Sprintf("%s", err),
+	}
+	weixin.AddSplog(&m)
+	return
 }
 
 //佣金列表
@@ -93,14 +101,15 @@ func productService_categories() string{
 //start	Int	N	开始行
 //limit	Int	N	行数
 //todo:目前少参数，要新版API
-func commissionService_list(start, limit string) string {
+func commissionService_list(start, limit string) (content string, err error) {
 	method := "commissionService.list"
 	Params := map[string]interface{}{
-		"method":method,
-		"billMonth":"201408",
-		"start":start,
-		"limit":limit,
+		"method":    method,
+		"billMonth": "201408",
+		"start":     start,
+		"limit":     limit,
 	}
+
 	return Post2Serv(Params)
 }
 
@@ -113,12 +122,12 @@ func commissionService_list(start, limit string) string {
 //orderId	String	N	请求推荐之后,api返回的推荐流水号(推荐ID)
 //start	Int	Y	开始行
 //limit	Int	Y	行数
-func recommendService_detail(start, limit string) string {
+func recommendService_detail(start, limit string) (content string, err error) {
 	method := "recommendService.detail"
 	Params := map[string]interface{}{
-		"method":method,
-		"start":start,
-		"limit":limit,
+		"method": method,
+		"start":  start,
+		"limit":  limit,
 	}
 	return Post2Serv(Params)
 }
@@ -129,13 +138,13 @@ func recommendService_detail(start, limit string) string {
 //mobile	String	Y	被推荐人手机号码
 //productId	String	Y	产品ID
 //effectiveMode	String	N	生效方式：0 当月开通(默认) 1 次月开通
-func recommendService_recommend(mobile, productId, effectiveMode string) string {
+func recommendService_recommend(mobile, productId, effectiveMode string) (content string, err error) {
 	method := "recommendService.recommend"
 	Params := map[string]interface{}{
-		"method":method,
-		"mobile":mobile,
-		"productId":productId,
-		"effectiveMode":effectiveMode,
+		"method":        method,
+		"mobile":        mobile,
+		"productId":     productId,
+		"effectiveMode": effectiveMode,
 	}
 	return Post2Serv(Params)
 }
@@ -148,26 +157,26 @@ func recommendService_recommend(mobile, productId, effectiveMode string) string 
 //category	String	N	产品分类ID
 //start	int	Y	分页起始页
 //limit	int	Y	每页记录条数
-func productService_list(start , limit string) string {
+func productService_list(start, limit string) (content string, err error) {
 	method := "productService.list"
 	Params := map[string]interface{}{
 
-		"method":method,
-		"start":start,
-		"limit":limit,
+		"method": method,
+		"start":  start,
+		"limit":  limit,
 	}
 	return Post2Serv(Params)
 }
 
 //单个产品查询
-func productService_Single(productCode, start , limit string) string {
+func productService_Single(productCode, start, limit string) (content string, err error) {
 	method := "productService.list"
 	Params := map[string]interface{}{
 
-		"method":method,
-		"start":start,
-		"limit":limit,
-		"productCode":productCode,
+		"method":      method,
+		"start":       start,
+		"limit":       limit,
+		"productCode": productCode,
 	}
 	return Post2Serv(Params)
 }
@@ -175,12 +184,12 @@ func productService_Single(productCode, start , limit string) string {
 //已订购列表，针对被推荐的用户
 //名称	类型	是否必须	描述
 //mobile	String	Y	查询用户的联通手机号
-func userService_getOrders(mobile string) string {
+func userService_getOrders(mobile string) (content string, err error) {
 	method := "userService.getOrders"
 	Params := map[string]interface{}{
 
-		"method":method,
-		"mobile":mobile,
+		"method": method,
+		"mobile": mobile,
 	}
 	return Post2Serv(Params)
 }
@@ -189,16 +198,16 @@ func userService_getOrders(mobile string) string {
 //名称	类型	是否必须	描述
 //mobile	String	Y	用户手机号
 
-func userService_userInfo(mobile string) string {
+func userService_userInfo(mobile string) (content string, err error) {
 	Params := map[string]interface{}{
-		"mobile":mobile,
-		"method":"userService.userInfo",
+		"mobile": mobile,
+		"method": "userService.userInfo",
 	}
 	return Post2Serv(Params)
 }
 
 //执行API
-func Post2Serv(Params map[string]interface{}) string {
+func Post2Serv(Params map[string]interface{}) (content string, err error) {
 	Params["appkey"] = appkey
 	Params["v"] = version
 	Params["loginName"] = loginName
@@ -215,11 +224,13 @@ func Post2Serv(Params map[string]interface{}) string {
 	if err != nil {
 		beego.Debug(err)
 	}
-	return str
+	return str, err
 }
 
 //签名
-func Signature(Params map[string]interface{} , securityKey string) string {
+//所有参数key按升序排列，顺序取出按key+value组合在一起，最后加上securitykey，做sha1运算
+//返回运算值作为sig
+func Signature(Params map[string]interface{}, securityKey string) string {
 
 	//	Params := map[string]interface {}{
 	//
@@ -231,8 +242,6 @@ func Signature(Params map[string]interface{} , securityKey string) string {
 	//		"appkey":"a6479ba4c45b658c",
 	//	}
 
-
-
 	//appkey:="dy-weixinyx"
 	//securityKey := "fksds2323dsdf"
 
@@ -240,9 +249,9 @@ func Signature(Params map[string]interface{} , securityKey string) string {
 	sort.Strings(strs)
 	str := ""
 	for _, s := range strs {
-		str += s+Params[s].(string)
+		str += s + Params[s].(string)
 	}
-	str+=securityKey
+	str += securityKey
 	//fmt.Printf("Signature()\n", str)
 	h := sha1.New()
 	h.Write([]byte(str))
