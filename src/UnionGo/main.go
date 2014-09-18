@@ -41,6 +41,7 @@ func main() {
 //	beego.InsertFilter("/d/*",beego.BeforeExec,FilterUser)
 	beego.AutoRouter(&controllers.MainController{})
 	beego.AutoRouter(&controllers.SpController{})
+	beego.AutoRouter(&controllers.AlipayController{})
 	beego.Run()
 
 }
